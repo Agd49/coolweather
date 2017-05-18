@@ -40,7 +40,7 @@ public class CoolWeatherDB {
 			ContentValues values = new ContentValues();
 			values.put("province_name", province.getProvinceName());
 			values.put("province_code", province.getProvinceCode());
-			db.insert(DB_NAME, null, values);
+			db.insert("Province", null, values);
 			return true;
 		}
 		return false;
@@ -50,7 +50,7 @@ public class CoolWeatherDB {
 			ContentValues values = new ContentValues();
 			values.put("city_name", city.getCityName());
 			values.put("city_code", city.getCityCode());
-			db.insert(DB_NAME, null, values);
+			db.insert("City", null, values);
 			return true;
 		}
 		return false;
@@ -60,7 +60,7 @@ public class CoolWeatherDB {
 				ContentValues values = new ContentValues();
 				values.put("county_name", county.getCountyName());
 				values.put("county_code", county.getCountyCode());
-				db.insert(DB_NAME, null, values);
+				db.insert("County", null, values);
 				return true;
 			}
 			return false;
@@ -68,19 +68,28 @@ public class CoolWeatherDB {
 	public List<Province> loadProvinces() {
 		List<Province> list = new ArrayList<Province>();
 		//Cursor是跟每一个数据库有关系的，所有没有构造方法而是通过db得到
-		Cursor cursor = db.query(DB_NAME, null, null, null, null, null, null);
-		for (cursor.moveToFirst();!cursor.isLast();cursor.moveToNext()) {
-			Province province = new Province();
-			province.setProvinceId(cursor.getInt(cursor.getColumnIndex("id")));
-			province.setProvinceName(cursor.getString(cursor.getColumnIndex("province_name")));
-			province.setProvinceCode(cursor.getString(cursor.getColumnIndex("province_code")));
-			list.add(province);
+		//db查询的事表中的内容，所以第一个数据是数据库的哪张表，这里出现过错误
+		Cursor cursor = db.query("Province", null, null, null, null, null, null);
+		if (cursor.moveToFirst()) {
+			do{
+				Province province = new Province();
+				province.setProvinceId(cursor.getInt(cursor.getColumnIndex("id")));
+				province.setProvinceName(cursor.getString(cursor.getColumnIndex("province_name")));
+				province.setProvinceCode(cursor.getString(cursor.getColumnIndex("province_code")));
+				list.add(province);
+			} while (cursor.moveToNext());
 		}
 		return list;
 	}
-	public List<City> loadCities() {
+	/**
+	 * 搜索城市和省不同，搜索省时需要把所有的省份均打印出来，而搜索城市是需要把对应的省份
+	 * 的城市搜索出来
+	 * @return
+	 */
+	public List<City> loadCities(int provinceId) {
 		List<City> list = new ArrayList<City>();
-		Cursor cursor = db.query(DB_NAME, null, null, null, null, null, null);
+		//selection一个占位符?，那么selectionArgs String[]这里也只有一个元素
+		Cursor cursor = db.query("City", null, "province_id = ?", new String[] {String.valueOf(provinceId)}, null, null, null);
 		if (cursor.moveToFirst()) {
 			do {
 				City city = new City();
@@ -92,9 +101,10 @@ public class CoolWeatherDB {
 		}
 		return list;
 	}
-	public List<County> loadCounties() {
+	public List<County> loadCounties(int cityId) {
 		List<County> list = new ArrayList<County>();
-		Cursor cursor = db.query(DB_NAME, null, null, null, null, null, null);
+		Cursor cursor = db.query("County", null, "city_id = ?", new String[]{String.valueOf(cityId)}, null, null, null);
+		//使用这种方式会超出边界
 		for (cursor.moveToFirst();!cursor.isLast();cursor.moveToNext()) {
 			County county = new County();
 			county.setCityId(cursor.getInt(cursor.getColumnIndex("id")));

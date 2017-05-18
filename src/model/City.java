@@ -4,7 +4,7 @@ public class City {
 	private int cityId;
 	private String cityName;
 	private String cityCode;
-	private int Province;
+	private int ProvinceId;
 	public int getCityId() {
 		return cityId;
 	}
@@ -24,10 +24,10 @@ public class City {
 		this.cityCode = cityCode;
 	}
 	public int getProvince() {
-		return Province;
+		return ProvinceId;
 	}
-	public void setProvince(int province) {
-		Province = province;
+	public void setProvinceId(int provinceId) {
+		ProvinceId = provinceId;
 	}
 	
 }
