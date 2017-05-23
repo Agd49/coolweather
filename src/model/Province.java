@@ -22,4 +22,7 @@ public class Province {
 	public void setProvinceCode(String provinceCode) {
 		this.provinceCode = provinceCode;
 	}
+	public String toString() {
+		return String.valueOf(provinceId) + " " + provinceCode + " " + provinceName;
+	}
 }

@@ -1,60 +1,130 @@
 package util;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import model.City;
 import model.County;
 import model.Province;
+import android.app.Activity;
 import android.text.TextUtils;
+import android.util.Log;
 import db.CoolWeatherDB;
 
 public class Utility {
-	public synchronized static boolean handleProvincesResponse(CoolWeatherDB coolWeatherDB, String response) {
-		if (!TextUtils.isEmpty(response)) {
-			String[] allProvinces = response.split(",");
-			if (allProvinces != null && allProvinces.length > 0) {
-				for (String temp: allProvinces) {
-					String[] array = temp.split("\\|");
-					Province province = new Province();
-					province.setProvinceCode(array[0]);
-					province.setProvinceName(array[1]);
-					coolWeatherDB.saveProvince(province);
+	private static final String filename_city = "city.txt";
+	private static final String filename_province = "province.txt";
+	private static final String filename_county = "county.txt";
+	private static final String TAGString = "Utility";
+	public static boolean handleProvinceInTxt(final CoolWeatherDB coolWeatherDB, final Activity activity){
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				try {
+					InputStream is = activity.getAssets().open(filename_province);
+					BufferedReader br = new BufferedReader(new InputStreamReader(is));
+					String line = null;
+					while ((line = br.readLine()) != null) {
+						String[] array = line.split("\\|");
+						Province province = new Province();
+						province.setProvinceCode(array[0]);
+						province.setProvinceName(array[1]);
+						//Log.e(TAGString, province.toString());
+						if (!coolWeatherDB.saveProvince(province)) {
+							Log.d("Utility", "´æ´¢Ê¡·Ý·¢ÏÖ´íÎó");
+						}
+						
+					}
+					is.close();
+					br.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				return true;
 			}
-		}
+			
+		}).start();
+		
 		return false;
 	}
-	public synchronized static boolean handleCitiesResponse(CoolWeatherDB coolWeatherDB, String response, int provinceId) {
-		if (TextUtils.isEmpty(response)) {
-			String[] allCities = response.split(",");
-			if (allCities != null && allCities.length > 0) {
-				for (String temp: allCities) {
-					String[] array = temp.split("\\|");
-					City city = new City();
-					city.setCityCode(array[0]);
-					city.setCityName(array[1]);
-					city.setProvinceId(provinceId);
-					coolWeatherDB.saveCity(city);
+	public static boolean handleCityInTxt(final CoolWeatherDB coolWeatherDB, final Activity activity) {
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				try {
+					InputStream is = activity.getAssets().open(filename_city);
+					BufferedReader br = new BufferedReader(new InputStreamReader(is));
+					String line = null;
+					while ((line = br.readLine()) != null) {
+						String[] array = line.split("\\|");
+						City city = new City();
+						city.setCityCode(array[0]);
+						city.setCityName(array[1]);
+						city.setProvinceId(Integer.valueOf(array[2]));
+						//Log.e(TAGString, city.toString());
+						if (!coolWeatherDB.saveCity(city)) {
+							Log.d("Utility", "city ´æ´¢ error!");
+						}
+					}
+					is.close();
+					br.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				return true;
 			}
-		}
+			
+		}).start();
 		return false;
 	}
-	public synchronized static boolean handleCountiesResponse(CoolWeatherDB coolWeatherDB, String response, int cityId) {
-		if (TextUtils.isEmpty(response)) {
-			String[] allCounties = response.split(",");
-			if (allCounties != null && allCounties.length > 0) {
-				for (String temp: allCounties) {
-					String[] array = temp.split("\\|");
-					County county = new County();
-					county.setCountyCode(array[0]);
-					county.setCountyName(array[1]);
-					county.setCityId(cityId);
-					coolWeatherDB.saveCounty(county);
+	public static boolean handleCountyInTxt(final CoolWeatherDB coolWeatherDB, final Activity activity) {
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				try {
+					InputStream is = activity.getAssets().open(filename_county);
+					BufferedReader br = new BufferedReader(new InputStreamReader(is));
+					String line = null;
+					while ((line = br.readLine()) != null) {
+						String[] array = line.split("\\|");
+						County county = new County();
+						county.setCountyCode(array[0]);
+						county.setCountyName(array[1]);
+						county.setCityId(Integer.valueOf(array[2]));
+						//Log.e(TAGString, county.toString());
+						if (!coolWeatherDB.saveCounty(county)) {
+							Log.d("Utility","county´æ´¢´íÎó");
+						}
+						
+					}
+					is.close();
+					br.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				return true;
 			}
-		}
+			
+		}).start();
+		
 		return false;
 	}
 }

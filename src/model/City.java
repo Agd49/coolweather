@@ -23,11 +23,13 @@ public class City {
 	public void setCityCode(String cityCode) {
 		this.cityCode = cityCode;
 	}
-	public int getProvince() {
+	public int getProvinceId() {
 		return ProvinceId;
 	}
 	public void setProvinceId(int provinceId) {
-		ProvinceId = provinceId;
+		this.ProvinceId = provinceId;
 	}
-	
+	public String toString() {
+		return String.valueOf(cityId) + " " + cityCode + " " + cityName + " " + String.valueOf(ProvinceId);
+	}
 }

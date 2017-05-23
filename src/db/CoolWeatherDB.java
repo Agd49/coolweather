@@ -6,6 +6,7 @@ import java.util.List;
 import model.City;
 import model.County;
 import model.Province;
+import util.LogUtil;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -16,6 +17,7 @@ import android.database.sqlite.SQLiteDatabase;
 public class CoolWeatherDB {
 	private SQLiteDatabase db;
 	private static int VERSION = 1;
+	private final String TAGString = "CoolWeatherDB"; 
 	private static final String DB_NAME = "cool_weather";
 	private static CoolWeatherDB coolWeatherDB;
 	private CoolWeatherDB(Context context) {
@@ -50,6 +52,7 @@ public class CoolWeatherDB {
 			ContentValues values = new ContentValues();
 			values.put("city_name", city.getCityName());
 			values.put("city_code", city.getCityCode());
+			values.put("province_id", city.getProvinceId());
 			db.insert("City", null, values);
 			return true;
 		}
@@ -60,6 +63,7 @@ public class CoolWeatherDB {
 				ContentValues values = new ContentValues();
 				values.put("county_name", county.getCountyName());
 				values.put("county_code", county.getCountyCode());
+				values.put("city_id", county.getCityId());
 				db.insert("County", null, values);
 				return true;
 			}
@@ -87,6 +91,7 @@ public class CoolWeatherDB {
 	 * @return
 	 */
 	public List<City> loadCities(int provinceId) {
+		LogUtil.d(TAGString, "loadCities( " + provinceId);
 		List<City> list = new ArrayList<City>();
 		//selection一个占位符?，那么selectionArgs String[]这里也只有一个元素
 		Cursor cursor = db.query("City", null, "province_id = ?", new String[] {String.valueOf(provinceId)}, null, null, null);
@@ -96,21 +101,29 @@ public class CoolWeatherDB {
 				city.setCityCode(cursor.getString(cursor.getColumnIndex("city_code")));
 				city.setCityId(cursor.getInt(cursor.getColumnIndex("id")));
 				city.setCityName(cursor.getString(cursor.getColumnIndex("city_name")));
+				city.setProvinceId(provinceId);
 				list.add(city);
 			} while(cursor.moveToNext());
 		}
 		return list;
 	}
 	public List<County> loadCounties(int cityId) {
+		LogUtil.d(TAGString, "loadCounties( " + String.valueOf(cityId));
 		List<County> list = new ArrayList<County>();
 		Cursor cursor = db.query("County", null, "city_id = ?", new String[]{String.valueOf(cityId)}, null, null, null);
-		//使用这种方式会超出边界
-		for (cursor.moveToFirst();!cursor.isLast();cursor.moveToNext()) {
-			County county = new County();
-			county.setCityId(cursor.getInt(cursor.getColumnIndex("id")));
-			county.setCountyCode(cursor.getString(cursor.getColumnIndex("county_code")));
-			county.setCountyName(cursor.getString(cursor.getColumnIndex("county_name")));
-			list.add(county);
+//		//使用这种方式会超出边界
+//		for (cursor.moveToFirst();!cursor.isLast();cursor.moveToNext()) {
+//			
+//		}
+		if (cursor.moveToFirst()) {
+			do {
+				County county = new County();
+				county.setCountyId(cursor.getInt(cursor.getColumnIndex("id")));
+				county.setCountyCode(cursor.getString(cursor.getColumnIndex("county_code")));
+				county.setCountyName(cursor.getString(cursor.getColumnIndex("county_name")));
+				county.setCityId(cityId);
+				list.add(county);
+			} while(cursor.moveToNext());
 		}
 		return list;
 	}

@@ -29,5 +29,8 @@ public class County {
 	public void setCityId(int cityId) {
 		this.cityId = cityId;
 	}
-	
+	@Override
+	public String toString() {
+		return String.valueOf(countyId) + " " + countyCode + " " + countyName + " " +  String.valueOf(cityId);
+	}
 }

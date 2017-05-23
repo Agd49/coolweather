@@ -8,11 +8,13 @@ import model.County;
 import model.Province;
 import util.HttpRequestListener;
 import util.HttpUtil;
+import util.LogUtil;
 import util.Utility;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -27,6 +29,7 @@ import com.example.coolweather.R;
 import db.CoolWeatherDB;
 
 public class ChooseAreaActivity extends Activity{
+	private final String TagString = "ChooseAreaActivity";
 	private List<String> dataList = new ArrayList<String>();
 	private ArrayAdapter<String> adapter;
 	private CoolWeatherDB coolWeatherDB;
@@ -36,18 +39,19 @@ public class ChooseAreaActivity extends Activity{
 	private List<City> citiesList;
 	private List<County> countiesList;
 	/**
-	 * ÏÔÊ¾¶Ô»°¿ò
+	 * é–¿ç†¸æ»é·é£ãšé–¿ç†ºæ®•æµ¼æ¬å«¹é–¿ç†¸æ»é·ï¿½
 	 */
 	private ProgressDialog progressDialog;
 	/**
-	 * ÕâÀï¹¹ÔìºÜ¾«Ãî£¬°üÀ¨²éÑ¯µÄÊ±ºòÍ¨¹ıselecetedProvince,selectedCityµÈ
-	 * ÔÚonBackPresss()ÖĞ£¬Ò²¿ÉÒÔÍ¨¹ıcurrentLevel,À´Ñ¡Ôñ¼´½«Ö´ĞĞqueryCities()£¬queryCounties(),queryProvinces()
-	 * Ñ¡ÖĞµÄ¼¶±ğ,ÎªÁË±æ±ğÏÖÔÚÊÇÔÚÄÄÕÅ±íÉÏ£¬ÒÔ´ËÀ´¸Ä±äÏÔÊ¾ListView
+	 * é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†ç€¯é–¿ç†¸æ»é·ç–¯å§­é–¿ç†¸æ»é·é£æ¾˜é¡’å©ƒå«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†ºç¤é¡–ã‚†å«¹é–¿ç†ºç²¸é²å¬«å«¹é–¿ç†¼åºé¡­æ“å«¹é–¿ç†ºæ°®elecetedProvince,selectedCityé–¿ç†¸æ»é·ï¿½
+	 * é–¿ç†¸æ»é·ç©™nBackPresss()é–¿ç†·å½¨é”å¿”å«¹æ¶”ç†¼æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½ï¿½æ°¶æ•“é‚ã‚†å«¹currentLevel,é–¿ç†¸æ»é·çƒ½ï¿½å¤æ•“æµ å©‚åµ†é‚ã‚†å«¹éµÑ‡æ•“é‚ã‚†å«¹queryCities()é–¿ç†¸æ»é·ç©›ueryCounties(),queryProvinces()
+	 * é–«å¤æ•“é™î‚¤æ®‘çº­é”‹å«¹é–¿ç†¸æ»é·ï¿½,æ¶“æ´ªæ•“é“æŒå”»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·é£æ±é–¿ç†¸æ»é·å³°ç¬‡é–¿ç†¸æ»é·é”‹ç°®é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹ç’‹å¬®æ•“é‚ã‚†å«¹é–¿ç†ºç²¸ç¼î™¯stView
 	 */
 	private int currentLevel;
 	private final int provinceLevel = 0;
 	private final int cityLevel = 1;
 	private final int countyLevel = 2;
+	private boolean isHandleInTxt = false;
 	private Province selectedProvince;
 	private City selectedCity;
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +63,12 @@ public class ChooseAreaActivity extends Activity{
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dataList);
 		listView.setAdapter(adapter);
 		coolWeatherDB = CoolWeatherDB.getInstance(this);
+//		if (!isHandleInTxt) {
+//			Utility.handleProvinceInTxt(coolWeatherDB, this);
+//			Utility.handleCityInTxt(coolWeatherDB, this);
+//			Utility.handleCountyInTxt(coolWeatherDB, this);
+//			isHandleInTxt = true;
+//		}
 		listView.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -69,6 +79,9 @@ public class ChooseAreaActivity extends Activity{
 					selectedProvince = provincesList.get(position);
 					queryCities();
 				} else if (currentLevel == cityLevel) {
+//					for (City c: citiesList) {
+//						LogUtil.e(TagString, c.toString());
+//					}
 					selectedCity = citiesList.get(position);
 					queryCounties();
 				}
@@ -77,8 +90,14 @@ public class ChooseAreaActivity extends Activity{
 		});
 		queryProvinces();
 	}
+	
+	protected void onStart() {
+        super.onStart();
+        
+    }
+	
 	/**
-	 * ²éÑ¯È«¹úËùÓĞµÄÊ¡£¬ÓÅÏÈ´ÓÊı¾İ¿â²éÑ¯£¬Èç¹û²éÑ¯²»µ½¾ÍÈ¥·şÎñÆ÷²éÑ¯
+	 * é–¿ç†¸æ»é·ç–¯î‡—éã„©æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é™î‚¤î•®é·é£æ¸·é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¼ã‚ºæˆç‚¬å«¹é–¿ç†¸æ»é·çƒ½æ•“é¹å³°å°…é·çƒ½æ•“ç»æ ´å½é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹ç’‡ãˆ¤æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é˜å©šæ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·ç–¯î‡—
 	 */
 	private void queryProvinces() {
 		provincesList = coolWeatherDB.loadProvinces();
@@ -87,14 +106,18 @@ public class ChooseAreaActivity extends Activity{
 			for (Province p : provincesList) {
 				dataList.add(p.getProvinceName());
 			}
-			//adpter¹¹ÔìµÄÊ±ºòÊ±Ê¹ÓÃÁËdataListÕâ¸ö²ÎÊıµÄ£¬Èç½ñÕâ¸ö²ÎÊı·¢ÉúÁË¸Ä±ä
+			//adpteré–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†ºç²¸é²å¬«å«¹é–¿ç†ºç²¸ç»—æ—‚æ«¢é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†ºç¦ŒataListé–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹å¦¯ï¿ æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·çƒ½æ•“é‚ã‚†å«¹é–¿ç†¸æ»é·é£å„Šç’‹å¬®æ•“é”Ÿï¿½
 			adapter.notifyDataSetChanged();
 			listView.setSelection(0);
-			textView.setText("ÖĞ¹ú");
+			textView.setText("ä¸­å›½");
 			currentLevel = provinceLevel;
 		} else {
-			queryFromServer(null, "province");
+			LogUtil.d(TagString, "å¾—åˆ°çš„çœåºåˆ—ä¸º0");
+			Utility.handleProvinceInTxt(coolWeatherDB, this);
 		}
+//		else {
+//			queryFromServer(null, "province");
+//		}
 	}
 	private void queryCities() {
 		citiesList = coolWeatherDB.loadCities(selectedProvince.getProvinceId());
@@ -108,11 +131,16 @@ public class ChooseAreaActivity extends Activity{
 			textView.setText(selectedProvince.getProvinceName());
 			currentLevel = cityLevel;
 		} else {
-			queryFromServer(selectedProvince.getProvinceCode(), "city");	
+			LogUtil.d(TagString, "å¾—åˆ°åŸå¸‚åºåˆ—ä¸º0");
+			Utility.handleCityInTxt(coolWeatherDB, this);
 		}
+//		else {
+//			queryFromServer(selectedProvince.getProvinceCode(), "city");	
+//		}
 	}
 	private void queryCounties() {
-		countiesList = coolWeatherDB.loadCounties(selectedCity.getCityId());
+		LogUtil.d(TagString, selectedCity.getCityCode());
+		countiesList = coolWeatherDB.loadCounties(Integer.parseInt(selectedCity.getCityCode()));
 		if (countiesList.size() > 0) {
 			dataList.clear();
 			for (County c : countiesList) {
@@ -122,78 +150,35 @@ public class ChooseAreaActivity extends Activity{
 			listView.setSelection(0);
 			textView.setText(selectedCity.getCityName());
 			currentLevel = countyLevel;
-		} else {
-			queryFromServer(selectedCity.getCityCode(), "county");
+		}  else {
+			LogUtil.d(TagString	, "å¾—åˆ°çš„å¿åºåˆ—ä¸º0");
+			Utility.handleCountyInTxt(coolWeatherDB, this);
+			countiesList = coolWeatherDB.loadCounties(Integer.parseInt(selectedCity.getCityCode()));
+			for (County c : countiesList) {
+				LogUtil.d(TagString, c.getCountyName());
+			}
 		}
+//		else {
+//			queryFromServer(selectedCity.getCityCode(), "county");
+//		}
 	}
-	private void queryFromServer(final String code, final String type) {
-		// TODO Auto-generated method stub
-		String address;
-		if (!TextUtils.isEmpty(code)) {
-			address = "http://www.weather.com.cn/data/list3/city" + code + ".xml";
+	private void queryFromTxt (String type) {
+		if (type.equals("city")) {
+			Utility.handleCityInTxt(coolWeatherDB, this);
+			queryCities();
+		} else if (type.equals("county")) {
+			Utility.handleCountyInTxt(coolWeatherDB, this);
+			queryCounties();
 		} else {
-			address = "http://www.weather.com.cn/data/list3/city.xml";
+			Utility.handleProvinceInTxt(coolWeatherDB, this);
+			queryProvinces();
 		}
-		showProgressDialog();
-		//ÉêÇëÍøÂç£¬ĞèÒªÍøÂçµØÖ·£¬²¢ÇÒÊ¹ÓÃ¶Ôµ÷·½·¨
-		HttpUtil.requestHttp(address, new HttpRequestListener() {
-
-			@Override
-			public void onError(Exception e) {
-				// TODO Auto-generated method stub
-				runOnUiThread(new Runnable(){
-
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						closeProgressDialog();
-						Toast.makeText(ChooseAreaActivity.this, "¼ÓÔØÊ§°Ü", Toast.LENGTH_SHORT).show();
-					}
-					
-				});
-			}
-
-			@Override
-			public void onFinish(String response) {
-					// TODO Auto-generated method stub
-					boolean result = false;
-					if ("province".equals(type)) {
-						result = Utility.handleProvincesResponse(coolWeatherDB,
-						response);
-					} else if ("city".equals(type)) {
-						result = Utility.handleCitiesResponse(coolWeatherDB,
-						response, selectedProvince.getProvinceId());
-					} else if ("county".equals(type)) {
-						result = Utility.handleCountiesResponse(coolWeatherDB,
-						response, selectedCity.getCityId());
-					}
-					if (result) {
-						// Í¨¹ırunOnUiThread()·½·¨»Øµ½Ö÷Ïß³Ì´¦ÀíÂß¼­
-						//Èç¹ûÊı¾İ¿âÖĞÕÒ²»µ½Êı¾İ£¬¾ÍÊ¹ÓÃÍøÂç´Ó·şÎñÆ÷ÖĞ»ñµÃÊı¾İ£¬Ö®ºóÔÙ
-						//µ÷ÓÃÖ®Ç°µÄ·½·¨£¬´ÓÊı¾İ¿âÖĞ»ñµÃÊı¾İ£¬Èç¹ûÊı¾İ¿â¼ÓÔØ´íÎó£¬¾Í¼ÌĞø
-						//´ÓÍøÂçÖĞ»ñµÃÊı¾İ
-						runOnUiThread(new Runnable() {
-							@Override
-							public void run() {
-								closeProgressDialog();
-								if ("province".equals(type)) {
-									queryProvinces();
-								} else if ("city".equals(type)) {
-									queryCities();
-								} else if ("county".equals(type)) {
-									queryCounties();
-								}
-							}
-						});
-					}
-			}
-		});
 	}
 	private void showProgressDialog() {
 		// TODO Auto-generated method stub
 		if (progressDialog == null) {
 			progressDialog = new ProgressDialog(this);
-			progressDialog.setMessage("ÕıÔÚ¼ÓÔØ...");
+			progressDialog.setMessage("æ­£åœ¨åŠ è½½...");
 			progressDialog.setCanceledOnTouchOutside(true);
 		}
 		progressDialog.show();
