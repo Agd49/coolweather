@@ -6,15 +6,15 @@ import java.util.List;
 import model.City;
 import model.County;
 import model.Province;
-import util.HttpRequestListener;
-import util.HttpUtil;
 import util.LogUtil;
+import util.MyApplication;
 import util.Utility;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -22,7 +22,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.coolweather.R;
 
@@ -54,8 +53,26 @@ public class ChooseAreaActivity extends Activity{
 	private boolean isHandleInTxt = false;
 	private Province selectedProvince;
 	private City selectedCity;
+	public static Activity getInstance() {
+		Activity instance = null;
+		if (instance == null) {
+			instance = new ChooseAreaActivity();
+		}
+		return instance;
+	}
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+		if (pref.getBoolean("selected_city", false)) {
+			Intent intent = new Intent(this, WeatherActivity.class);
+			startActivity(intent);
+			finish();
+			/**
+			 * finish()之后，还是会继续在执行了跳转之后的任务了，还是会回到这个位置，继续执行接下来的
+			 * 所以，这里要return
+			 */
+			return;
+		}
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.choose_area);
 		listView = (ListView)findViewById(R.id.list_view);
@@ -84,16 +101,21 @@ public class ChooseAreaActivity extends Activity{
 //					}
 					selectedCity = citiesList.get(position);
 					queryCounties();
+				} else if (currentLevel == countyLevel) {
+					String countyName = countiesList.get(position).getCountyName();
+					Intent intent = new Intent(ChooseAreaActivity.this, WeatherActivity.class);
+					intent.putExtra("county_name", countyName);
+					startActivity(intent);
+					finish();
+					return;
 				}
-			}
-			
+			}			
 		});
 		queryProvinces();
 	}
 	
 	protected void onStart() {
         super.onStart();
-        
     }
 	
 	/**

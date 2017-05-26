@@ -10,7 +10,6 @@ import model.City;
 import model.County;
 import model.Province;
 import android.app.Activity;
-import android.text.TextUtils;
 import android.util.Log;
 import db.CoolWeatherDB;
 

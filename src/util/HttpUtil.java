@@ -4,13 +4,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+
+import activity.ChooseAreaActivity;
+import android.content.Context;
+
+import model.Weather;
 
 
 public class HttpUtil {
-	public static void requestHttp(final String address, final HttpRequestListener listener) {
+	public static void requestHttp(final String address, final HttpRequestListener listener, final Context context) {
 		new Thread (new Runnable() {
 
 			@Override
@@ -37,10 +44,11 @@ public class HttpUtil {
 						temp = bufferedReader.readLine();
 						//System.out.println(temp);
 					}
-					System.out.println(sb.toString());
-					//LogUtil.d("HttpUtil.class GET", sb.toString());
+					//System.out.println(sb.toString());
+					LogUtil.d("HttpUtil.class GET", sb.toString());
 					if (listener != null) {
-						listener.onFinish(sb.toString());
+						//listener.onFinish(sb.toString(), ChooseAreaActivity.getInstance());
+						listener.onFinish(sb.toString(), context);
 					}
 				} catch (MalformedURLException e) {
 					// TODO Auto-generated catch block
@@ -60,21 +68,39 @@ public class HttpUtil {
 			
 		}).start();	
 	}
+	/**
+	 * 传入县的名字，得到可以向新浪天气接口申请的address
+	 * @param countyName
+	 */
+	public static String countyToSinaWeatherAddress(String countyName) {
+		String ret = null;
+		String encodeCountyName = null;
+		try {
+			encodeCountyName = URLEncoder.encode(countyName, "GBK");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ret = "http://php.weather.sina.com.cn/xml.php?city="
+				+ encodeCountyName + "&password=DJOYnieT8234jlsK&day=0";
+		return ret;
+	}
 	public static void main(String []args) {
-		HttpUtil.requestHttp("http://www.weather.com.cn/data/cityinfo/101170102.html", new HttpRequestListener() {
-
-			@Override
-			public void onError(Exception e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onFinish(String response) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-		});
+		String address = countyToSinaWeatherAddress("永宁");
+//		HttpUtil.requestHttp(address, new HttpRequestListener() {
+//
+//			@Override
+//			public void onError(Exception e) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//
+//			@Override
+//			public void onFinish(String response) {
+//				// TODO Auto-generated method stub
+//				Weather.parseXMLWithPull(response);
+//			}
+//			
+//		});		
 	}
 }
